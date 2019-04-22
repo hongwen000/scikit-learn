@@ -2253,8 +2253,7 @@ class Bootstrap(with_metaclass(ABCMeta)):
     # Static marker to be able to introspect the CV type
     indices = True
 
-    def __init__(self, n_iter, m, random_state=None):
-        self.m = m
+    def __init__(self, n_iter, random_state=None):
         self.n_iter = n_iter
         self.random_state = random_state
 
@@ -2264,17 +2263,16 @@ class Bootstrap(with_metaclass(ABCMeta)):
         n_samples = _num_samples(X)
         for i in range(self.n_iter):
             # random partition
-            train = rng.randint(0, n_samples, size=(self.m, ))
+            train = rng.randint(0, n_samples, size=(n_samples, ))
             tmp = np.unique(train)
             test = np.setdiff1d(np.arange(n_samples), tmp)
             yield train, test
 
     def __repr__(self):
-        return ('%s(n_iter=%d, m=%d, '
+        return ('%s(n_iter=%d, '
                 'random_state=%s)' % (
                     self.__class__.__name__,
                     self.n_iter,
-                    self.m,
                     self.random_state,
                 ))
 
