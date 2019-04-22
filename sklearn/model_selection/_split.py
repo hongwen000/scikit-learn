@@ -32,6 +32,7 @@ from ..utils.fixes import _Iterable as Iterable
 from ..base import _pprint
 
 __all__ = ['BaseCrossValidator',
+           'Bootstrap',
            'KFold',
            'GroupKFold',
            'LeaveOneGroupOut',
@@ -2247,3 +2248,35 @@ def _build_repr(self):
         params[key] = value
 
     return '%s(%s)' % (class_name, _pprint(params, offset=len(class_name)))
+
+class Bootstrap(with_metaclass(ABCMeta)):
+    # Static marker to be able to introspect the CV type
+    indices = True
+
+    def __init__(self, n_iter, m, random_state=None):
+        self.m = m
+        self.n_iter = n_iter
+        self.random_state = random_state
+
+    def split(self, X, y=None, groups=None):
+        X, y, groups = indexable(X, y, groups)
+        rng = check_random_state(self.random_state)
+        n_samples = _num_samples(X)
+        for i in range(self.n_iter):
+            # random partition
+            train = rng.randint(0, n_samples, size=(self.m, ))
+            tmp = np.unique(train)
+            test = np.setdiff1d(np.arange(n_samples), tmp)
+            yield train, test
+
+    def __repr__(self):
+        return ('%s(n_iter=%d, m=%d, '
+                'random_state=%s)' % (
+                    self.__class__.__name__,
+                    self.n_iter,
+                    self.m,
+                    self.random_state,
+                ))
+
+    def get_n_splits(self, X=None, y=None, groups=None):
+        return self.n_iter
